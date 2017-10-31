@@ -26,7 +26,7 @@ OMGene runs as a single command that takes as input a tabulated text file contai
 etc.
 ```
 
-OMGene is then run using:
+Each GTF file should contain the coordinates of a *single gene*. OMGene is then run using:
 
 `python omgene.py -i path/to/gene_info_file.tdv -o output_folder`
 
