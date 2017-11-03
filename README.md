@@ -6,9 +6,7 @@ OMGene (Optimise My Gene) aims to improve simultaneously sets of gene models on 
 
 Given an input set of gene models and a set of genomes, it will seek to find the gene model variants for each gene which collectively optimise the coherence of the multiple sequence alignment, thus maximising the likelihood that a gene model is correct in the absence of extrinsic data. OMGene requires only a set of single-entry GTF gene model files and a set of input FASTA genome files.
 
-Github link:
-
-https://github.com/mdunne/OMGene
+**Github link:** https://github.com/mdunne/OMGene
 
 ![alt text](http://empede.co.uk/imgrepos/OMGene_examples.png "OMGene examples")
 
