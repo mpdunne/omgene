@@ -53,13 +53,15 @@ Cysteine and uracil (C and U) will be interpreted identically. If these options 
 
 ### Search margins
 
-By default, OMGene search the region 600bp either side of the termini of each inputted gene. This buffer margin can be expanded or contracted as desired using the -b option, e.g.
+By default, OMGene searches the region 600bp either side of the termini of each inputted gene. This buffer margin can be expanded or contracted as desired using the -b option, e.g.
 
 `python omgene.py -i path/to/gene_info_file.tdv -o output_folder -b 1000`
 
 ### Serving suggestion
 
 It is recommended that orthogroups be obtained using [OrthoFinder](https://github.com/davidemms/OrthoFinder), implemented on primary transcripts only.
+
+The results from OrthoFinder are outputted as a large, tab-delimited table of gene IDs. You will need to use these IDs to extract genomic GTF coordinates from your species GTF file, and produce a TDV input file as described above.
 
 ### Reference species
 
