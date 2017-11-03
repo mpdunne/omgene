@@ -10,6 +10,8 @@ Github link:
 
 https://github.com/mdunne/OMGene
 
+![alt text](http://empede.co.uk/imgrepos/OMGene_examples.png "OMGene examples")
+
 
 Usage
 =====
