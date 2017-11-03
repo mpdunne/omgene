@@ -77,6 +77,66 @@ if errors:
         for error in errors: print("-- " + str(error))
         sys.exit()
 
+##########################################
+# Check programs
+##########################################
+
+def canRunCommand(command, qAllowStderr = False):
+#        sys.stdout.write("Test can run \"%s\"" % command)
+        capture = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout = [x for x in capture.stdout]
+        stderr = [x for x in capture.stderr]
+        return check(len(stdout) > 0 and (qAllowStderr or len(stderr) == 0))
+
+def canRunSpecific(line, lineFormatted):
+        return True if canRunCommand(line) else outputBool(False, "ERROR: Cannot run " + lineFormatted, \
+                "    Please check "+ lineFormatted +" is installed and that the executables are in the system path\n")
+
+def canRunMinusH(package, packageFormatted):
+        return canRunSpecific(package + " -h", packageFormatted)
+
+def canRunAwk():
+        return returnsExpected("awk '{print 4 + 5}'", "awk '{print 4 + 5}'", "a", "9\n")
+
+def canRunMan(package, packageFormatted):
+        return canRunSpecific("man " + package, packageFormatted)
+
+def check(boolVal, trueMsg=" - ok", falseMsg=" - failed", trueExtra="", falseExtra=""):
+        return outputBool(True, trueMsg, trueExtra) if boolVal else outputBool(False, falseMsg, falseExtra)
+
+def returnsExpected(message, command, contentsIn, expectedOut):
+       # sys.stdout.write("Test can run \""+message+"\"\n")
+        path_tf1 = tempfile.mktemp(); path_tf2 = tempfile.mktemp()
+        write(contentsIn, path_tf1)
+        callFunction(command + " " + path_tf1 + " > " + path_tf2)
+        res = read(path_tf2)
+        return res == expectedOut
+
+def outputBool(boolVal, msg, msgExtra):
+#        print msg
+        if msgExtra: print msgExtra
+        return boolVal
+
+
+def checkShell():
+        """ Run quick checks to ensure the relevant packages are installed, and that they do
+                the things we need them to do (applies in particular to bedtools and to R).
+                - awk           - exonerate   - bedtools
+                - echo          - sed
+                - cut           - grep
+                - sort          -tac/cat
+                """
+	sprint("Checking installed programs...")
+        checks = []
+        for program in ["sed", "echo", "cut", "sort", "grep", "uniq", "tac", "cat", "mktemp"]:
+                checks.append(canRunMan(program, program))
+        for program in ["exonerate", "bedtools"]:
+                checks.append(canRunMinusH(program, program))
+        #Check presence of orthofinder
+        checks += [canRunAwk()]
+        if not all(checks):
+                print("\nSome programs required to run omgene are not installed or are not callable.\nPlease ensure all of the above programs are installed and in the system path.")
+                sys.exit()
 
 ##########################################
 # Define blosum matrices
@@ -132,6 +192,10 @@ def printSeqs(seqs):
 
 def sprint(string):
 	print string
+
+def read(path_file, tag="r"):
+        with open(path_file, tag) as f:
+                return f.read()
 
 def readCsv(path_file, ignoreBlank = True, ignoreHash = False):
 	with open(path_file, "r") as f:
@@ -269,6 +333,11 @@ def isFeature(c, length, choices):
 
 def binAnd(a, b):
 	return a & b
+
+def binAndMulti(l):
+	r = l[0]
+	for i in l: r = binAnd(r,i)
+	return r
 
 def binCompat(bin1, bin2, checkpoints):
 	anded = bin1 & bin2
@@ -1442,6 +1511,36 @@ def mostCoherentSet(sequences, path_wDir):
 def writeSlices(css, order, path_out):
 	sequences = dict((k, string.join([j[0][i] for j in css],"")) for i,k in enumerate(order))
 	writeSeqs([makeSeq(k, sequences[k]) for k in sequences], path_out)
+
+def randomBestSubsets2(subsets, checkpoints):
+        full = "1"*len(subsets[0])
+        ss = [int(s,2) for s in subsets if not s == full]
+	if not ss: return [int(full,2)]
+	checksB = [int(s,2) for s in checkpoints]
+        results = []
+        for i in range(1000):
+                # Pick a random starting point. This will be naturally
+                # weighted by the most abundant entries.
+                st = ss[:]
+                while True:
+                        r = random.choice(st)
+                        st = [binAnd(r, i) for i in st if binCompat(i, r, checksB)]
+                        sq = [s for s in st if not s == r]
+                        if sq:
+                                st = sq[:]
+                        else:
+                                results += st
+                                break
+	ress = set(results)
+	maxsup = 0; winners = []
+	for i in ress:
+		sup = support(i, ss)
+		if sup > maxsup:
+			winners = [i]
+			maxsup = sup
+		elif sup == maxsup:
+			winners += [i]
+        return winners
 
 def randomBestSubsets(subsets, checkpoints):
         full = "1"*len(subsets[0])
@@ -3274,6 +3373,9 @@ def go(path_inf, path_ref, path_resultsDir, path_wDir, minintron, minexon, int_n
 if __name__ == '__main__':
 	"""OMGene - mutual improvement of gene models through gene orthology
 	"""
+	# Check the shell...
+	checkShell()
+	
 	# Read in the command line arguments
 	parser = argparse.ArgumentParser(description="Run OMGene")
 	parser.add_argument("-i", "--infoFiles", metavar="infiles", dest="IN")
