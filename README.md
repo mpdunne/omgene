@@ -45,7 +45,7 @@ You may wish to use non-canonical nucleotide combinations for start and splice s
 
 `python ../omgene.py -i in.tdv -o out -do "gc,gu" -ac "gg,ag" -sc "aug,cug"`.
 
-Cysteine and uracil (C and U) will be interpreted identically. If these options are omitted, the default will be used: GU,GC donor sites, AG acceptor sites, and ATG start codons. The more options that are inputted here, the more variants will be probed by OMGene, potentially considerably increasing its runtime. Therefore we recommend some degree of restraint here when choosing your start and splice sites.
+Cysteine and uracil (C and U) will be interpreted identically. If these options are omitted, the default will be used: GU,GC donor sites, AG acceptor sites, and AUG start codons. The more options that are inputted here, the more variants will be probed by OMGene, potentially considerably increasing its runtime. Therefore we recommend some degree of restraint here when choosing your start and splice sites.
 
 
 ### Search margins
