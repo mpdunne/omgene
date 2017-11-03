@@ -35,13 +35,14 @@ An example file is given in the "samples" directory included in this repository.
 
 `python ../omgene.py -i in.tdv -o out`
 
-Once this has run, the "out" directory will contain the results. To compare the original and new results, compare the files working/or.aln and results/all.aln. To view this quickly in the terminal, you may wish to use the [Alan alignment viewer](https://github.com/mpdunne/alan). If you have alan installed, you can type
+	Once this has run, the "out" directory will contain the results. To compare the original and new results, compare the files `working/or.aln` and `results/all.aln`markdwon cheat sheet
+. To view this quickly in the terminal, you may wish to use the [Alan alignment viewer](https://github.com/mpdunne/alan). If you have alan installed, you can type
 
 `cat working/or.aln results/all.aln > compare.aln; alan compare.aln`
 
 ### Alternate start and splice sites
 
-You may wish to use non-canonical nucleotide combinations for start and splice sites, for example GU--GG splicing or CUG start codons. These can be specified using the `-do`, `-ac`, and `-sc` options for donor sites, acceptor sites, and start codons respectively. Site lists must be comma-separated.If you wish to include the canonical codon or splice site in the search, you must also specify it here. For example:
+You may wish to use non-canonical nucleotide combinations for start and splice sites, for example GU--GG splicing or CUG start codons. These can be specified using the `-do`, `-ac`, and `-sc` options for donor sites, acceptor sites, and start codons respectively. Site lists must be comma-separated. If you wish to include the canonical codon or splice site in the search, you must also specify it here. For example:
 
 `python ../omgene.py -i in.tdv -o out -do "gc,gu" -ac "gg,ag" -sc "aug,cug"`.
 
