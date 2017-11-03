@@ -1518,18 +1518,28 @@ def randomBestSubsets2(subsets, checkpoints):
 	if not ss: return [int(full,2)]
 	checksB = [int(s,2) for s in checkpoints]
         results = []
+	sealed = []
         for i in range(1000):
                 # Pick a random starting point. This will be naturally
                 # weighted by the most abundant entries.
-                st = ss[:]
+                st = [s for s in ss if not s in sealed]
+		if not st: break
                 while True:
-                        r = random.choice(st)
+			sp = [s for s in st if not s in sealed]
+			if not sp:
+				break
+                        r = random.choice(sp)
                         st = [binAnd(r, i) for i in st if binCompat(i, r, checksB)]
+			sp = [s for s in st if not s in sealed]
+			if not sp:
+				sealed += [r]
+				break
                         sq = [s for s in st if not s == r]
                         if sq:
                                 st = sq[:]
                         else:
-                                results += st
+                                results += [r]
+				sealed += [r]
                                 break
 	ress = set(results)
 	maxsup = 0; winners = []
