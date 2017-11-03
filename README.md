@@ -44,9 +44,9 @@ Once this has run, the "out" directory will contain the results. To compare the 
 
 ### Alternate start and splice sites
 
-You may wish to use non-canonical nucleotide combinations for start and splice sites, for example GU--GG splicing or CUG start codons. These can be specified using the `-do`, `-ac`, and `-sc` options for donor sites, acceptor sites, and start codons respectively. If you wish to include the canonical codon or splice site in the search, you must also specify it here. For example:
+You may wish to use non-canonical nucleotide combinations for start and splice sites, for example GU--GG splicing or CUG start codons. These can be specified using the `-do`, `-ac`, and `-sc` options for donor sites, acceptor sites, and start codons respectively. Site lists must be comma-separated.If you wish to include the canonical codon or splice site in the search, you must also specify it here. For example:
 
-`python ../omgene.py -i in.tdv -o out -do "gc,gt" -ac "gg,ag" -sc "aug,cug`.
+`python ../omgene.py -i in.tdv -o out -do "gc,gu" -ac "gg,ag" -sc "aug,cug"`.
 
 Cysteine and uracil (C and U) will be interpreted identically. If these options are omitted, the default will be used: GU,GC donor sites, AG acceptor sites, and ATG start codons. The more options that are inputted here, the more variants will be probed by OMGene, potentially considerably increasing its runtime. Therefore we recommend some degree of restraint here when choosing your start and splice sites.
 
