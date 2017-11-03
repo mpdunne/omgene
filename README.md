@@ -8,9 +8,6 @@ Given an input set of gene models and a set of genomes, it will seek to find the
 
 **Github link:** https://github.com/mdunne/OMGene
 
-![alt text](http://empede.co.uk/imgrepos/OMGene_examples.png "OMGene examples")
-
-
 Usage
 =====
 
@@ -125,6 +122,10 @@ The BedTools suite can be downloaded from [https://github.com/arq5x/bedtools2/re
 
 Exonerate can be downloaded from the EBI website, https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate
 
+Example results
+===============
+
+![alt text](http://empede.co.uk/imgrepos/OMGene_examples.png "OMGene examples")
 
 Other useful software
 =====================
