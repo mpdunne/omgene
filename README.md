@@ -6,7 +6,7 @@ What does OMGene do?
 
 Given an input set of gene models and a set of genomes, it will seek to find the gene model variants for each gene which **collectively optimise the coherence of the multiple sequence alignment**, thus maximising the likelihood that a gene model is correct in the absence of extrinsic data. OMGene requires only a set of single-entry GTF gene model files and a set of input FASTA genome files.
 
-**Github link:** https://github.com/mdunne/OMGene
+**Github link:** https://github.com/mpdunne/OMGene
 
 Usage
 =====
