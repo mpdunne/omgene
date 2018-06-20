@@ -31,6 +31,8 @@ __credits__ = "Michael Dunne, Steve Kelly"
 ################ Safely import packages ################
 ########################################################
 
+import numpy as np
+
 errors = []
 libnames = ["csv", "re", "os", "sys", "itertools", "copy", "subprocess", "multiprocessing", \
 	"commands", "datetime", "tempfile", "pickle", "string", "pyfaidx", "argparse", \
@@ -65,8 +67,8 @@ except ImportError as e:
         errors.append(e)
 try:
 	from scipy.special import binom as bn
-except ImportError as 
-        errors.append(e)
+except ImportError as e: 
+       errors.append(e)
 
 if errors:
         print("Missing modules :(\nThe following module errors need to be resolved before running OMGene:")
