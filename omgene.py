@@ -31,6 +31,8 @@ __credits__ = "Michael Dunne, Steve Kelly"
 ################ Safely import packages ################
 ########################################################
 
+import numpy as np
+
 errors = []
 libnames = ["csv", "re", "os", "sys", "itertools", "copy", "subprocess", "multiprocessing", \
 	"commands", "datetime", "tempfile", "pickle", "string", "pyfaidx", "argparse", \
@@ -65,8 +67,8 @@ except ImportError as e:
         errors.append(e)
 try:
 	from scipy.special import binom as bn
-except ImportError as 
-        errors.append(e)
+except ImportError as e: 
+       errors.append(e)
 
 if errors:
         print("Missing modules :(\nThe following module errors need to be resolved before running OMGene:")
@@ -1096,7 +1098,7 @@ def prepareGeneregions(dict_seqInfo, dict_genomeInfo, path_wDir, int_numCores, i
 		path_allBaseLoci	= path_gDir + "/" + genomeId + ".bases"
 		path_mergedBaseLoci	= path_gDir + "/" + genomeId + ".bases.merged"
 		concatFiles(bases_tight, path_allBaseLoci)
-		callFunction("sort -k1,1V -k4,4n " + path_allBaseLoci + " | bedtools merge -s -i - > " + path_mergedBaseLoci)
+		callFunction("sort -k1,1V -k4,4n " + path_allBaseLoci + " | bedtools merge -s -c 4,5,6,7 -o distinct,distinct,distinct,distinct -i - > " + path_mergedBaseLoci)
 		sequences = [copy.deepcopy(a) for a in dict_seqInfo.values() if a["genome"] == path_genome]
 		for line in readCsv(path_mergedBaseLoci):
 			# Initialise the generegion in the holder dict
