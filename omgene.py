@@ -31,8 +31,6 @@ __credits__ = "Michael Dunne, Steve Kelly"
 ################ Safely import packages ################
 ########################################################
 
-import numpy as np
-
 errors = []
 libnames = ["csv", "re", "os", "sys", "itertools", "copy", "subprocess", "multiprocessing", \
 	"commands", "datetime", "tempfile", "pickle", "string", "pyfaidx", "argparse", \
@@ -67,8 +65,12 @@ except ImportError as e:
         errors.append(e)
 try:
 	from scipy.special import binom as bn
-except ImportError as e: 
-       errors.append(e)
+except ImportError as e:
+        errors.append(e)
+try:
+	import numpy as np
+except ImportError as e:
+	errors.append(e)
 
 if errors:
         print("Missing modules :(\nThe following module errors need to be resolved before running OMGene:")
@@ -856,6 +858,20 @@ def splitToAbsFrame(gtf):
 		gtf_framed[frameAbs].append(line)
 	return gtf_framed
 
+def mergeStranded(path_in, path_out, str_infmt="gtf"):
+	# GTF format will have strand in column 7, bed format is in col 6.
+	col = "6" if str_infmt == "bed" else "7"
+	# Split by strand
+	callFunction("awk '$"+col+"==\"+\"' "+path_in + " > " +path_in+".pos")
+	callFunction("awk '$"+col+"==\"-\"' "+path_in + " > " +path_in+".neg")
+	# Merge separately
+	callFunction("sort -k4,4n " + path_in + ".pos | bedtools merge -i - | cut -f1-3 | sed -r \"s/$/\\t+/g\" > " + path_out)
+	callFunction("sort -k4,4n " + path_in + ".neg | bedtools merge -i - | cut -f1-3 | sed -r \"s/$/\\t-/g\" >> " + path_out)
+	# Kill the files
+	deleteIfPresent(path_in+".pos")
+	deleteIfPresent(path_in+".neg")
+	
+
 def mergeFriendly(path_gtf, path_out, sort=True):
 	"""Merge elements of a gtf file, making sure only to merge
 	   which are frame-compatible. Requires frame info.
@@ -867,7 +883,8 @@ def mergeFriendly(path_gtf, path_out, sort=True):
 		if not any(gtf_framed[i]): continue
 		path_gtftmp = path_gtf+".f"+str(i)+".tmp"
 		writeCsv(gtf_framed[i], path_gtftmp)
-		merged = [a.split("\t") for a in grabLines("sort -k4,4n " + path_gtftmp + " | bedtools merge -i -")]
+		mergeStranded(path_gtftmp, path_gtftmp +".merged", "gtf")
+		merged = readCsv(path_gtftmp +".merged")
 		model = gtf_framed[i][0]
 		for line in merged:
 			newline = model[:]
@@ -904,7 +921,7 @@ def fetchCds(path_gtfIn, path_genome, path_cdsFastaOut, str_token):
 		gtfBed="$tf/gtfBed"
 
 		#Prepare the gtf
-		grep -vP "^$" $infile | awk -v token="$token" '$3==token' > $gtfCds
+		grep -vP "^$" $infile | awk -v token="$token" 'toupper($3)==toupper(token)' > $gtfCds
 		cut -f1-8 $gtfCds > $gtfBed.1
 		sed -r "s/.*transcript_id[ =]\\"?([^\\";]*)\\"?;?.*/\\1/g" $gtfCds > $gtfBed.2
 		paste $gtfBed.1 $gtfBed.2 | perl -ne 'chomp; @l=split; printf "$l[0]\\t%s\\t$l[4]\\t$l[8]\\t.\\t$l[6]\\n", $l[3]-1' | sort -u | sort -k1,1V -k2,2n > $gtfBed
@@ -1098,7 +1115,7 @@ def prepareGeneregions(dict_seqInfo, dict_genomeInfo, path_wDir, int_numCores, i
 		path_allBaseLoci	= path_gDir + "/" + genomeId + ".bases"
 		path_mergedBaseLoci	= path_gDir + "/" + genomeId + ".bases.merged"
 		concatFiles(bases_tight, path_allBaseLoci)
-		callFunction("sort -k1,1V -k4,4n " + path_allBaseLoci + " | bedtools merge -s -c 4,5,6,7 -o distinct,distinct,distinct,distinct -i - > " + path_mergedBaseLoci)
+		mergeStranded(path_allBaseLoci, path_mergedBaseLoci, "gtf")
 		sequences = [copy.deepcopy(a) for a in dict_seqInfo.values() if a["genome"] == path_genome]
 		for line in readCsv(path_mergedBaseLoci):
 			# Initialise the generegion in the holder dict
