@@ -921,7 +921,7 @@ def fetchCds(path_gtfIn, path_genome, path_cdsFastaOut, str_token):
 		gtfBed="$tf/gtfBed"
 
 		#Prepare the gtf
-		grep -vP "^$" $infile | awk -v token="$token" '$3==token' > $gtfCds
+		grep -vP "^$" $infile | awk -v token="$token" 'toupper($3)==toupper(token)' > $gtfCds
 		cut -f1-8 $gtfCds > $gtfBed.1
 		sed -r "s/.*transcript_id[ =]\\"?([^\\";]*)\\"?;?.*/\\1/g" $gtfCds > $gtfBed.2
 		paste $gtfBed.1 $gtfBed.2 | perl -ne 'chomp; @l=split; printf "$l[0]\\t%s\\t$l[4]\\t$l[8]\\t.\\t$l[6]\\n", $l[3]-1' | sort -u | sort -k1,1V -k2,2n > $gtfBed
