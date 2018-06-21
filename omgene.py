@@ -551,11 +551,11 @@ def align(f_in, f_out, double=False, safety = False):
 	if safety: safetyCheck(f_in, f_out, f_out)
 
 def alignVanilla(f_in, f_out):
-	callFunction("linsi --quiet " + f_in +" > "  + f_out)
+	callFunction("mafft --localpair --maxiterate 1000 --quiet " + f_in +" > "  + f_out)
 
 def alignRef(f_in, f_out, p_ref, p_refOut):
 	callFunction("sed -r \"s/>/>dummy./g\" " + p_ref + " > " + p_refOut)
-	callFunction("linsi --quiet --add " + f_in +" " + p_refOut + " > "  + f_out)
+	callFunction("mafft --localpair --maxiterate 1000 --quiet --add " + f_in +" " + p_refOut + " > "  + f_out)
 	refseqs = [a for a in readSeqs(f_out) if "dummy" in a.id]
 	writeSeqs(refseqs, p_refOut)
 	cleanDummies(f_out)
@@ -563,7 +563,7 @@ def alignRef(f_in, f_out, p_ref, p_refOut):
 def alignSeeded(list_f_in, f_out, prealigned = False, safety = False):
 	# Use each of the input fasta files as seeds. Need to double-check
 	# that they each have more than one entry.
-	functionString = "linsi --quiet "
+	functionString = "mafft --localpair --maxiterate 1000 --quiet "
 	f_all = tempfile.mktemp()
 	for f_in in list_f_in:
 		callFunction("cat " + f_in +" >> " + f_all)
