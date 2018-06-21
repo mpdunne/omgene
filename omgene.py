@@ -858,6 +858,20 @@ def splitToAbsFrame(gtf):
 		gtf_framed[frameAbs].append(line)
 	return gtf_framed
 
+def mergeStranded(path_in, path_out, str_infmt="gtf"):
+	# GTF format will have strand in column 7, bed format is in col 6.
+	col = "6" if str_infmt == "bed" else "7"
+	# Split by strand
+	callFunction("awk '$"+col+"==\"+\"' "+path_in + " > " +path_in+".pos")
+	callFunction("awk '$"+col+"==\"-\"' "+path_in + " > " +path_in+".neg")
+	# Merge separately
+	callFunction("sort -k4,4n " + path_in + ".pos | bedtools merge -i - | cut -f1-3 | sed -r \"s/$/\\t+/g\" > " + path_out)
+	callFunction("sort -k4,4n " + path_in + ".neg | bedtools merge -i - | cut -f1-3 | sed -r \"s/$/\\t-/g\" >> " + path_out)
+	# Kill the files
+	deleteIfPresent(path_in+".pos")
+	deleteIfPresent(path_in+".neg")
+	
+
 def mergeFriendly(path_gtf, path_out, sort=True):
 	"""Merge elements of a gtf file, making sure only to merge
 	   which are frame-compatible. Requires frame info.
@@ -869,7 +883,8 @@ def mergeFriendly(path_gtf, path_out, sort=True):
 		if not any(gtf_framed[i]): continue
 		path_gtftmp = path_gtf+".f"+str(i)+".tmp"
 		writeCsv(gtf_framed[i], path_gtftmp)
-		merged = [a.split("\t") for a in grabLines("sort -k4,4n " + path_gtftmp + " | bedtools merge -i -")]
+		mergeStranded(path_gtftmp, path_gtftmp +".merged", "gtf")
+		merged = readCsv(path_gtftmp +".merged")
 		model = gtf_framed[i][0]
 		for line in merged:
 			newline = model[:]
@@ -1100,7 +1115,7 @@ def prepareGeneregions(dict_seqInfo, dict_genomeInfo, path_wDir, int_numCores, i
 		path_allBaseLoci	= path_gDir + "/" + genomeId + ".bases"
 		path_mergedBaseLoci	= path_gDir + "/" + genomeId + ".bases.merged"
 		concatFiles(bases_tight, path_allBaseLoci)
-		callFunction("sort -k1,1V -k4,4n " + path_allBaseLoci + " | bedtools merge -s -i - > " + path_mergedBaseLoci)
+		mergeStranded(path_allBaseLoci, path_mergedBaseLoci, "gtf")
 		sequences = [copy.deepcopy(a) for a in dict_seqInfo.values() if a["genome"] == path_genome]
 		for line in readCsv(path_mergedBaseLoci):
 			# Initialise the generegion in the holder dict
