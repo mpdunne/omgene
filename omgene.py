@@ -65,8 +65,12 @@ except ImportError as e:
         errors.append(e)
 try:
 	from scipy.special import binom as bn
-except ImportError as 
+except ImportError as e:
         errors.append(e)
+try:
+	import numpy as np
+except ImportError as e:
+	errors.append(e)
 
 if errors:
         print("Missing modules :(\nThe following module errors need to be resolved before running OMGene:")
