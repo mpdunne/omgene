@@ -210,30 +210,6 @@ def get_options(list_gtf_lines):
     good_from_overlapping = get_non_overlapping_subsets(xoverlaps)
     for suboption in good_from_overlapping:
         options.append(clean_gtf_live(xsafe + suboption))
-    # The final set of options should involve simply splitting up into chunks, and throwing away parts that end up too tiny.
-    #	xoverlaps=goverlaps[:]
-    #	print "==============4"
-    #	for pair in itertools.combinations(goverlaps, 2):
-    #		l_safe, l_overlaps = get_overlaps(pair)
-    #		if l_overlaps:
-    #			first_first = int(l_overlaps[0][3]) <= int(l_overlaps[1][3])
-    #			first = l_overlaps[int(not first_first)]
-    #			second = l_overlaps[int(first_first)]
-    #			firstchunk1 = first[:]
-    #			firstchunk1[4] = int(second[3]) - 1
-    #			firstchunk2 = first[:]
-    #			firstchunk2[3] = int(second[3])
-    #			firstchunk2[7] = (3 - (int(second[3]) - int(first[3]) - int(first[7]))) % 3
-    #			secondchunk1 = second[:]
-    #			secondchunk1[4] = int(first[4])
-    #			secondchunk2 = second[:]
-    #			secondchunk2[3] = int(first[4]) + 1
-    #			secondchunk2[7] = (3 - (int(first[4]) + 1  - int(second[3]) - int(second[7]))) % 3
-    #			for opt in [firstchunk1, firstchunk2, secondchunk1, secondchunk2]:
-    #				if gtf_length(firstchunk1) >= 20: xoverlaps += [opt]
-    #	good_from_overlapping = get_non_overlapping_subsets(xoverlaps)
-    #	for suboption in good_from_overlapping:
-    #		options.append(clean_gtf_live(xsafe + suboption))
     return options
 
 

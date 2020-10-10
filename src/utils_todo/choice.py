@@ -1,3 +1,6 @@
+from collections import Counter
+
+
 def most_coherent_set(sequences, path_w_dir):
     # We take consensus slices to have something
     # to compare things to.

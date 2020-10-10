@@ -1,3 +1,6 @@
+from utils.feature_validation import *
+
+
 def is_donor_part(gtfline, cds):
     if is_terminal_part(gtfline, cds):
         return False

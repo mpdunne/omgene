@@ -3,6 +3,21 @@ from Bio.Align import substitution_matrices
 
 
 amino_acids = 'ACBEDGFIHKMLNQPSRTWVYXZ*'
+global_blosum_positions = None
+global_blosum_matrix = None
+global_blosum_dict = None
+
+
+def initialise_blosum_matrix(single_gap_penalty=-1, double_gap_penalty=0):
+    """
+    Initialise the global blosum matrices.
+
+    """
+    global global_blosum_dict, global_blosum_matrix, global_blosum_positions
+
+    global_blosum_dict = blosum_dict(single_gap_penalty, double_gap_penalty)
+    global_blosum_matrix = blosum_matrix(global_blosum_dict)
+    global_blosum_positions = blosum_positions()
 
 
 def blosum_dict(single_gap_penalty=-1, double_gap_penalty=0.5):

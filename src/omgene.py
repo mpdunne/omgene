@@ -35,25 +35,18 @@ import pyfaidx
 import argparse
 import random
 
-
-from utils.blosum_matrices import *
-
-static_blosdict = blosum_dict(-1, 0)
-static_blosmat = blosum_matrix(static_blosdict)
-static_blospos = blosum_positions()
-
-# Save time later by storing calculated binomial values
-static_binoms = {}
-
-
 from utils_todo.check_shell import *
 from utils.misc import *
-from utils_todo.feature_validation import *
 from utils.sequence_io import *
+
 from utils_todo.gtf_tools import *
 from utils_todo.part_groups import *
 from utils_todo.parts import *
 from utils_todo.alignment import *
+from utils_todo.exonerate import *
+from utils_todo.choice import *
+from utils_todo.fixing import *
+from utils_todo.filtering import *
 
 ########################################
 # Id parsing
@@ -99,20 +92,7 @@ def read_input_locations(path_inf, path_ref):
     return dict_seq_info
 
 
-def process_codon_option(co, length):
-    s_co = co.split(",")
-    for a in s_co:
-        a = re.sub(r" ", r"", a)
-        if not len(a) == length or any(not s.lower() in "acgtu" for s in a):
-            sys.exit("Invalid start codon/splice site choice: " + str(a))
-        yield re.sub(r"u", r"t", a.lower())
 
-
-def process_codon_options(do, ac, sc):
-    s_do = list(set(process_codon_option(do, 2)))
-    s_ac = list(set(process_codon_option(ac, 2)))
-    s_sc = list(set(process_codon_option(sc, 3)))
-    return s_do, s_ac, s_sc
 
 
 def read_input_file(data, dict_seq_info, keep=False):
@@ -304,15 +284,6 @@ def relativise_sequences(dict_generegions, dict_seq_info):
                 framify(path_gtf_rel)
                 with(open(path_gtf_rel, "r")) as b: o.write(b.read())
 
-
-########################################
-# Exonerate functions
-########################################
-
-from utils_todo.exonerate import *
-from utils_todo.choice import *
-from utils_todo.fixing import *
-from utils_todo.filtering import *
 
 ########################################
 # All the other functions
@@ -1338,6 +1309,39 @@ def go(path_inf, path_ref, path_results_dir, path_w_dir, minintron, minexon, int
     get_stats(dict_generegions, dict_seq_info, res, path_results_dir, path_w_dir)
 
 
+def process_codon_option(codon_option, expected_length):
+    """
+    Process a proposed codon option or set of options (separated by commas).
+    This function checks that the proposed codon is valid and checks that it is the
+    correc length for what is expected. Returns none if co is none.
+
+    :param codon_option: (str) Codon option, in string format, or comma-separated list of options
+    :param expected_length): (int) The expected length of the option, e.g. 3 for a start codon.
+    """
+    if codon_option is None:
+        return None
+
+    codon_options = codon_option.split(",")
+    options = []
+
+    for a in codon_options:
+        a = re.sub(r" ", r"", a)
+
+        if not len(a) == expected_length or any(not s.lower() in "acgtu" for s in a):
+            sys.exit("Invalid start codon/splice site choice: " + str(a))
+
+        options.append(re.sub(r"u", r"t", a.lower()))
+
+    return options
+
+
+def process_codon_options(do, ac, sc):
+    s_do = process_codon_option(do, 2)
+    s_ac = process_codon_option(ac, 2)
+    s_sc = process_codon_option(sc, 3)
+    return s_do, s_ac, s_sc
+
+
 if __name__ == '__main__':
     """OMGene - mutual improvement of gene models through gene orthology
     """
@@ -1349,15 +1353,15 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--info_files", metavar="infiles", dest="IN")
     parser.add_argument("-r", "--reference_files", metavar="reffiles", dest="RF", default="")
     parser.add_argument("-o", "--out_dir", metavar="outdir", dest="OD")
-    parser.add_argument("-g", "--gap_penalty", metavar="outdir", dest="GP")
+    parser.add_argument("-g", "--gap_penalty", metavar="outdir", dest="GP", default=1)
     parser.add_argument("--minintron", metavar="minintron", dest="MNI", default=4)
     parser.add_argument("--minexon", metavar="minexon", dest="MNE", default=4)
     parser.add_argument("-c", "--cores", metavar="numcores", dest="CO", default=1)
     parser.add_argument("-b", "--buffer", metavar="bufferamount", dest="SL", default=600)
     parser.add_argument("--safealign", action="store_true", dest="SA", default=False)
-    parser.add_argument("--donors", "-do", metavar="donors", dest="DO", default="gt,gc")
-    parser.add_argument("--acceptors", "-ac", metavar="acceptors", dest="AC", default="ag")
-    parser.add_argument("--startcodon", "-sc", metavar="startcodons", dest="SC", default="atg")
+    parser.add_argument("--donors", "-do", metavar="donors", dest="DO")
+    parser.add_argument("--acceptors", "-ac", metavar="acceptors", dest="AC")
+    parser.add_argument("--startcodon", "-sc", metavar="startcodons", dest="SC")
     args = parser.parse_args()
     # CUPCAKES: dependencies: pyfaidx, exonerate, blastp
     # Check existence and non-confliction of arguments
@@ -1372,12 +1376,9 @@ if __name__ == '__main__':
     int_slop_amount = int(args.SL)
     static_safe_align = args.SA
 
-    static_do, static_ac, static_sc = process_codon_options(args.DO, args.AC, args.SC)
-
-    if args.GP:
-        static_blosdict = blosum_dict(-1 * int(args.GP), 0)
-        static_blosmat = blosum_matrix(static_blosdict)
-        static_blospos = blosum_positions()
+    codon_options = process_codon_options(args.DO, args.AC, args.SC)
+    initialise_features(*codon_options)
+    initialise_blosum_matrix(-1 * int(args.GP), 0)
 
     path_results_dir, path_w_dir = prepare_output_folder(path_out_dir)
     go(path_inf, path_ref, path_results_dir, path_w_dir, minintron, minexon, int_num_cores, int_slop_amount)

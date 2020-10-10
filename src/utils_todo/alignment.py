@@ -1,8 +1,12 @@
 from Bio.Seq import Seq
+from collections import Counter
 import copy
+import itertools
+from scipy.special import binom
 import re
 import tempfile
 
+from utils.blosum_matrices import *
 from utils.misc import call_function
 from utils.sequence_io import read_seqs, write_seqs
 
@@ -15,13 +19,99 @@ def align(f_in, f_out):
     call_function("linsi --quiet " + f_in + " > " + f_out)
 
 
-
-
-
-
 def cds_to_aa_locs(locs):
-    return list(set([a / 3 for a in locs] + [(a + ((3 - a) % 3)) / 3 for a in locs]))
+    """
+    Convert coordinates of a CDS alignment to corresponding coordinates
+    of an amino acid alignment. If a CDS coordinate is not divisible by three,
+    return both the lower and upper values for its corresponding AA location.
 
+    :param locs: (list of ints) The locations
+    """
+    lower_locs = [a // 3 for a in locs]
+    upper_locs = [(a + ((3 - a) % 3)) // 3 for a in locs]
+    return sorted(list(set(lower_locs + upper_locs)))
+
+
+def alignment_score(sequences, omit_empty=False, scaled=False):
+    """
+    Return an score for the alignment, calculated by summing column scores
+    based on the Blosum matrix.
+
+    :param sequences: (List of SeqRecords) An iterable of SeqRecord items
+    :param omit_empty: (bool) Ignore any empty sequences
+    :param scaled: (bool) Whether to scale the alignment score by alignment length.
+    """
+    if omit_empty:
+        sequences = [s for s in sequences if not re.match(r'^-$', s.seq)]
+
+    if not sequences:
+        return 0
+
+    slen = len(sequences[0])
+    if not slen:
+        return 0
+
+    columns = {i: [s.seq[i] for s in sequences] for i in range(0, slen)}
+    scores = {i: col_score(columns[i]) for i in columns}
+    score = sum(scores.values())
+
+    return score if not scaled else score / (1.0 * slen)
+
+
+def col_score(column):
+    """
+    Get the alignment score for an individual column.
+
+    :param column: A column of amino acid values.
+    """
+    counts = Counter(column)
+    column_length = len(column)
+    countsmatrix = np.zeros((len(amino_acids), column_length))
+
+    # Else-else
+    for i, j in itertools.combinations(counts.keys(), 2):
+        ipos = amino_acids[i.upper()]
+        jpos = amino_acids[j.upper()]
+        countsmatrix[ipos, jpos] = counts[i] * counts[j]
+
+    # Self-self
+    for i in counts:
+        ipos = global_blosum_positions[i.upper()]
+        countsmatrix[ipos, ipos] = binom(counts[i], 2)
+
+    # Don't count things twice.
+    scoresmatrix = global_blosum_matrix * countsmatrix
+    score = np.sum(scoresmatrix) / binom(column_length, 2)
+    return score
+
+
+
+
+
+
+
+
+
+
+
+
+def chop_alignment(alnseqs, chopper, negative=False):
+    """chop an alignment based on a list of coordinates
+    """
+    if not alnseqs:
+        return []
+    if negative:
+        chopper = [a for a in range(len(alnseqs[0])) if not a in chopper]
+    return list(chop(alnseqs, chopper))
+
+
+def chop(alnseqs, chopper):
+    res = []
+    for a in alnseqs:
+        s = copy.deepcopy(a)
+        s.seq = Seq("".join([a[i] for i in chopper if 0 <= i < len(a.seq)]))
+        res.append(s)
+    return res
 
 def align_ref(f_in, f_out, p_ref, p_ref_out):
     call_function("sed -r \"s/>/>dummy./g\" " + p_ref + " > " + p_ref_out)
@@ -31,7 +121,7 @@ def align_ref(f_in, f_out, p_ref, p_ref_out):
     clean_dummies(f_out)
 
 
-def align_seeded(list_f_in, f_out, prealigned=False, safety=False):
+def align_seeded(list_f_in, f_out, prealigned=False):
     # Use each of the input fasta files as seeds. Need to double-check
     # that they each have more than one entry.
     function_string = "linsi --quiet "
@@ -72,42 +162,10 @@ def clean_dummies(f_out):
     write_seqs(dummies, f_out + ".dummies")
 
 
-def alignment_score(sequences, omit_empty=False, scaled=False):
-    sequences = [s for s in sequences if not omit_empty or list(set(str(s.seq))) != ["-"]]
-    if not sequences:
-        return 0
-    slen = len(sequences[0])
-    if not slen:
-        return 0
-    dist = dict((i, [s.seq[i] for s in sequences]) for i in range(0, slen))
-    scores = dict((c, col_score(dist[c])) for c in dist)
-    score = sum(scores.values())
-    return score if not scaled else score / (1.0 * slen)
 
 
-def col_score(column):
-    counts = Counter(column)
-    l = len(amino_acids)
-    cl = len(column)
-    countsmatrix = np.zeros((l, l))
-    for k in set(counts.values()):
-        if not k in static_binoms:
-            static_binoms[k] = bn(k, 2)
-    if not cl in static_binoms:
-        static_binoms[cl] = bn(cl, 2)
-    # Else-else
-    for i, j in itertools.combinations(counts.keys(), 2):
-        ipos = static_blospos[i.upper()]
-        jpos = static_blospos[j.upper()]
-        countsmatrix[ipos, jpos] = counts[i] * counts[j]
-    # Self-self
-    for i in counts:
-        ipos = static_blospos[i.upper()]
-        countsmatrix[ipos, ipos] = static_binoms[counts[i]]
-    # Don't count things twice.
-    scoresmatrix = static_blosmat * countsmatrix
-    score = np.sum(scoresmatrix) / static_binoms[cl]
-    return score
+
+
 
 
 def flatten_alignment(alignedseqs, gtfs, path_out="", pre_sorted=False):
@@ -169,20 +227,4 @@ def flatten_alignment(alignedseqs, gtfs, path_out="", pre_sorted=False):
 
 
 
-def chop_alignment(alnseqs, chopper, negative=False):
-    """chop an alignment based on a list of coordinates
-    """
-    if not alnseqs:
-        return []
-    if negative:
-        chopper = [a for a in range(len(alnseqs[0])) if not a in chopper]
-    return list(chop(alnseqs, chopper))
 
-
-def chop(alnseqs, chopper):
-    res = []
-    for a in alnseqs:
-        s = copy.deepcopy(a)
-        s.seq = Seq("".join([a[i] for i in chopper if 0 <= i < len(a.seq)]))
-        res.append(s)
-    return res
