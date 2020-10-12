@@ -52,6 +52,13 @@ def gtf_compatible_frame(gtfline1, gtfline2):
     return gtfline1.abs_frame == gtfline2.abs_frame
 
 
+def get_end_frame(gtfline):
+    """
+    Get the frame of the end of the GTF line.
+    """
+    return (gtfline.end - gtfline.start - gtfline.frame + 1) % 3
+
+
 def overlap_in_frame(first, second):
     """
     Returns whether the two gtf lines overlap and are in the same frame.

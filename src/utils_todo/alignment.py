@@ -16,7 +16,7 @@ def align(f_in, f_out):
     Run MAFFT L-INSI on a fasta file.
 
     """
-    call_function("linsi --quiet " + f_in + " > " + f_out)
+    call_function(f"linsi --quiet {f_in} > {f_out}")
 
 
 def cds_to_aa_locs(locs):
@@ -85,33 +85,39 @@ def col_score(column):
     return score
 
 
-
-
-
-
-
-
-
-
-
-
 def chop_alignment(alnseqs, chopper, negative=False):
-    """chop an alignment based on a list of coordinates
+    """
+    Return only the elements of the alignned sequences indexed by the values in chopper
+
+    :param alnseqs: A list of aligned sequences
+    :param chopper: A list of integer indices
+    :param negative: whether or not to invert the chopper list.
     """
     if not alnseqs:
         return []
+
     if negative:
         chopper = [a for a in range(len(alnseqs[0])) if not a in chopper]
-    return list(chop(alnseqs, chopper))
 
-
-def chop(alnseqs, chopper):
     res = []
     for a in alnseqs:
         s = copy.deepcopy(a)
         s.seq = Seq("".join([a[i] for i in chopper if 0 <= i < len(a.seq)]))
         res.append(s)
     return res
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def align_ref(f_in, f_out, p_ref, p_ref_out):
     call_function("sed -r \"s/>/>dummy./g\" " + p_ref + " > " + p_ref_out)
@@ -160,12 +166,6 @@ def clean_dummies(f_out):
         cleaned.append(s)
     write_seqs(cleaned, f_out)
     write_seqs(dummies, f_out + ".dummies")
-
-
-
-
-
-
 
 
 def flatten_alignment(alignedseqs, gtfs, path_out="", pre_sorted=False):

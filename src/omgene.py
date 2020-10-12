@@ -39,9 +39,8 @@ from utils_todo.check_shell import *
 from utils.misc import *
 from utils.sequence_io import *
 
-from utils_todo.gtf_tools import *
 from utils_todo.part_groups import *
-from utils_todo.parts import *
+from utils.parts import *
 from utils_todo.alignment import *
 from utils_todo.exonerate import *
 from utils_todo.choice import *

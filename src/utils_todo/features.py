@@ -27,9 +27,11 @@ def find_starts(proto_exon, cds, left=True, right=True, central=True, happy_with
         out = [pos]
         if happy_with_central:
             return out
+
     if right:
         out += walk_termini(cds, pos + frame, 3, lambda c: is_stop_codon(c), lambda x: x + 1 > boundary,
-                                  lambda c: is_start_codon(c), lambda x, c: c[x - 1:x + 2])
+                            lambda c: is_start_codon(c), lambda x, c: c[x - 1:x + 2])
+
     if left:
         out += walk_termini(cds, pos + frame, -3, lambda c: is_stop_codon(c), lambda x: x - 1 < 0,
                             lambda c: is_start_codon(c), lambda x, c: c[x - 1:x + 2])

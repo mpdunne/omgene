@@ -2,6 +2,31 @@ import itertools
 import networkx as nx
 import math
 from Bio.Seq import Seq
+from src.utils.misc import de_dup
+from src.utils.gtf_line import *
+import os
+
+class Gtf:
+    def __init__(self, source):
+
+        self.lines = []
+
+        if type(source) is str:
+            if os.path.exists(source):
+
+
+        elif type(source) is list:
+            for item in source:
+                if type(item) is GtfLine:
+                    self.lines.append(item)
+                elif type(item) is str:
+                    self.lines.append(GtfLine("\t".split(item)))
+                else:
+                    raise ValueError("Invalid GTF lines.")
+        else:
+            raise ValueError("Gtf class must be initialised with either a path to a valid GTF file,"
+                             "a list of GtfLine objects, or a list of valid GTF entries.")
+
 
 
 def safe_gtf(gtflines):
@@ -12,6 +37,8 @@ def safe_gtf(gtflines):
 def clean_gtf_live(gtf):
     return [line for line in gtf if not is_bad_gtf([line])]
 
+def clean_gtf(path_gtf_o, path_gtf):
+    call_function("sort -u " + path_gtf_o + " | sort -k4,4n > " + path_gtf)
 
 def is_bad_gtf(gtf):
     return any(int(line[3]) >= int(line[4]) for line in gtf)
@@ -29,8 +56,7 @@ def translate_part(cds_part):
     return str(Seq(cds_part[0:len(cds_part) - (len(cds_part) % 3)]).translate())
 
 
-def get_end_frame(gtf):
-    return (int(gtf[4]) - int(gtf[3]) - int(gtf[7]) + 1) % 3
+
 
 
 def get_overlaps(list_gtf):
@@ -160,8 +186,7 @@ def merge_friendly(path_gtf, path_out, sort=True):
     write_csv(out, path_out)
 
 
-def clean_gtf(path_gtf_o, path_gtf):
-    call_function("sort -u " + path_gtf_o + " | sort -k4,4n > " + path_gtf)
+
 
 
 def replace_seq(seq_object, new_seq):
