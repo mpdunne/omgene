@@ -2,6 +2,7 @@ import os
 import subprocess
 from utils_todo.gtf_tools import *
 
+
 def go_exonerate(path_w_dir, dict_generegions, dict_seq_info, int_num_cores):
     sprint("Performing first round exonerate...")
     # Prepare output directories

@@ -107,17 +107,26 @@ def chop_alignment(alnseqs, chopper, negative=False):
     return res
 
 
+def align_ref(fasta_new_seqs, fasta_new_seqs_out, fasta_ref_seqs, fasta_ref_seqs_out):
+    """
+    Add the sequences in fasta_new_seqs to the sequences in fasta_ref_seqs, performs an MSA (but
+    keeping the reference alignments unchanged except for possible gaps).
+    The resulting alignments for the new sequences and for the reference sequences are outputted to
+    fasta_new_seqs_out and fasta_ref_seqs_out respectively.
+    """
+    # Perform the alignment using linsi --add.
+    sed_file(fasta_ref_seqs, fasta_ref_seqs_out, r">", r">dummy.")
+    call_function(f"linsi --quiet --add {fasta_new_seqs} {fasta_ref_seqs_out} > {fasta_new_seqs_out}")
+
+    # Want to remove the ref seqs from fasta_new_seqs_out, and remove new seqs from fasta_ref_seqs_out.
+    refseqs = [a for a in read_seqs(fasta_new_seqs_out) if re.match(r"^>dummy", a.id)]
+    newseqs = [a for a in read_seqs(fasta_new_seqs_out) if not re.match(r"^>dummy", a.id)]
+
+    write_seqs(newseqs, fasta_new_seqs_out)
+    write_seqs(refseqs, fasta_ref_seqs_out)
 
 
 
-
-
-def align_ref(f_in, f_out, p_ref, p_ref_out):
-    sed_file(p_ref, p_ref_out, r">", r">dummy.")
-    call_function(f"linsi --quiet --add {f_in} {p_ref_out} > {f_out}")
-    refseqs = [a for a in read_seqs(f_out) if "dummy" in a.id]
-    write_seqs(refseqs, p_ref_out)
-    clean_dummies(f_out)
 
 
 
@@ -152,7 +161,7 @@ def align_seeded(list_f_in, f_out, prealigned=False):
             seqs += [dummy]
         write_seqs(seqs, f_in)
         if prealigned:
-            function_string += " --seed " + f_in
+            function_string += f" --seed {f_in}"
         else:
             f_in_aln = re.sub(r"\fa", r"", f_in) + ".aln"
             align(f_in, f_in_aln)

@@ -35,7 +35,7 @@ import pyfaidx
 import argparse
 import random
 
-from utils_todo.check_shell import *
+from utils.check_shell import *
 from utils.misc import *
 from utils.sequence_io import *
 
@@ -422,9 +422,6 @@ def choose_winners_ref(dict_options, path_w_dir, try_blank={}, path_ref_aln="", 
     # go with which ever one is better.
     if double_check: 
         path_all_aln, path_ref_out = realign_band(path_all_aln, path_ref_out, spanning_band=spanning_band)
-    # If this option is turned on, check for "parallel junction expansion": that is,
-    # events that force gaps to be created in the original alignment. Simply reject any such events.
-    #	if or_aln and parallel_check: path_all_aln = reject_parallels(path_all_aln, path_ref_out)
     return choose_them(path_all_aln, try_blank, seqlookup, seqlookup_rev, path_w_dir)
 
 

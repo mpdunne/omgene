@@ -23,11 +23,18 @@ def bin_sub(a, b):
 
 
 def bin_compat(bin1, bin2, checkpoints):
+    """
+    Returns whether or not the two input binaries, bin1 and bin2, agree
+    for at least one digit of each of the checkpoints.
+    """
     anded = bin1 & bin2
     return not any(anded & c == 0 for c in checkpoints)
 
 
 def support(a, bases):
+    """
+    Return the number of bases of which a is a subset.
+    """
     c = Counter(bases)
     return sum(c[j] for j in set(bases) if bin_sub(a, j))
 
