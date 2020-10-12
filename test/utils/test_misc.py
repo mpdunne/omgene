@@ -1,4 +1,7 @@
-from utils.misc import anyperm, del_indices, grab_lines
+from utils.misc import anyperm, del_indices, grab_lines, sed_file
+from utils.sequence_io import read_seqs
+from tempfile import mktemp
+import os
 
 from  unittest import TestCase
 
@@ -37,3 +40,16 @@ class TestMisc(TestCase):
         check3 = anyperm([1, 2, 3], [[1, 3, 2], [1, 3, 5]])
         self.assertTrue(check3)
 
+    def test_sed_file(self):
+        tmp = mktemp()
+        sed_file("test/resources/aa.fasta", tmp, r">gene", r">eneg")
+        seqs = read_seqs(tmp)
+        self.assertEqual(2, len(seqs))
+        self.assertEqual("eneg_1", seqs[0].id)
+        self.assertEqual("eneg_2", seqs[1].id)
+        sed_file("test/resources/aa.fasta", tmp, r"e", r"o")
+        seqs = read_seqs(tmp)
+        self.assertEqual(2, len(seqs))
+        self.assertEqual("gono_1", seqs[0].id)
+        self.assertEqual("gono_2", seqs[1].id)
+        os.remove(tmp)

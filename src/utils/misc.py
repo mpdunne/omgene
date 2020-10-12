@@ -2,6 +2,7 @@ import csv
 import os
 import copy
 import itertools
+import re
 import subprocess
 import sys
 
@@ -188,3 +189,10 @@ def anyperm(listin, checker):
     :return: (bool) A boolean saying whether or not some permutation of the input list is represented.
     """
     return any([(list(i) in checker) for i in itertools.permutations(listin)])
+
+
+def sed_file(file_in, file_out, sub_in, sub_out):
+    """
+    Read in a file, make a substitution, and write out to a different file
+    """
+    write(re.sub(sub_in, sub_out, read(file_in)), file_out)

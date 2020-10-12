@@ -7,7 +7,7 @@ import re
 import tempfile
 
 from utils.blosum_matrices import *
-from utils.misc import call_function
+from utils.misc import call_function, sed_file
 from utils.sequence_io import read_seqs, write_seqs
 
 
@@ -112,19 +112,28 @@ def chop_alignment(alnseqs, chopper, negative=False):
 
 
 
-
-
-
-
-
-
-
 def align_ref(f_in, f_out, p_ref, p_ref_out):
-    call_function("sed -r \"s/>/>dummy./g\" " + p_ref + " > " + p_ref_out)
-    call_function("linsi --quiet --add " + f_in + " " + p_ref_out + " > " + f_out)
+    sed_file(p_ref, p_ref_out, r">", r">dummy.")
+    call_function(f"linsi --quiet --add {f_in} {p_ref_out} > {f_out}")
     refseqs = [a for a in read_seqs(f_out) if "dummy" in a.id]
     write_seqs(refseqs, p_ref_out)
     clean_dummies(f_out)
+
+
+
+def clean_dummies(f_out):
+    toclean = read_seqs(f_out)
+    cleaned = []
+    dummies = []
+    for c in toclean:
+        if "dummy" in c.id:
+            continue
+        s = copy.deepcopy(c)
+        s.id = re.sub(r"_seed_", r"", c.id)
+        cleaned.append(s)
+    write_seqs(cleaned, f_out)
+    write_seqs(dummies, f_out + ".dummies")
+
 
 
 def align_seeded(list_f_in, f_out, prealigned=False):
@@ -152,20 +161,6 @@ def align_seeded(list_f_in, f_out, prealigned=False):
     call_function(function_string)
     # Remove the _seed_ prefix and remove any dummy entries
     clean_dummies(f_out)
-
-
-def clean_dummies(f_out):
-    toclean = read_seqs(f_out)
-    cleaned = []
-    dummies = []
-    for c in toclean:
-        if "dummy" in c.id:
-            continue
-        s = copy.deepcopy(c)
-        s.id = re.sub(r"_seed_", r"", c.id)
-        cleaned.append(s)
-    write_seqs(cleaned, f_out)
-    write_seqs(dummies, f_out + ".dummies")
 
 
 def flatten_alignment(alignedseqs, gtfs, path_out="", pre_sorted=False):
