@@ -4,6 +4,26 @@ import math
 from Bio.Seq import Seq
 
 
+class GtfLine:
+
+    def __init__(self, gtf_line, updates={}):
+        if type(gtf_line) is str:
+            gtf_line = gtf_line.split("\t")
+
+        if len(gtf_line) != 9:
+            raise ValueError("GTF line length must be 9.")
+
+        self.chr = updates.get('chr', gtf_line[0])
+        self.src = updates.get('src', gtf_line[1])
+        self.feature = updates.get('feature', gtf_line[2])
+        self.start = int(updates.get('start', gtf_line[3]))
+        self.end = int(updates.get('end', gtf_line[4]))
+        self.score = updates.get('score', gtf_line[5])
+        self.strand = updates.get('strand', gtf_line[6])
+        self.frame = int(updates.get('frame', gtf_line[7]))
+        self.attribute = updates.get('attribute', gtf_line[8])
+
+
 def abs_frame(gtfline):
     return (int(gtfline[3]) + int(gtfline[7])) % 3
 

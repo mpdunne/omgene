@@ -4,8 +4,8 @@ from utils.feature_validation import *
 def is_donor_part(gtfline, cds):
     if is_terminal_part(gtfline, cds):
         return False
-    if is_donor(cds[int(gtfline[4]):
-        int(gtfline[4]) + 2]): return True
+    if is_donor(cds[int(gtfline[4]): int(gtfline[4]) + 2]):
+        return True
 
 
 def is_acceptor_part(gtfline, cds):

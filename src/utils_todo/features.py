@@ -1,3 +1,21 @@
+from utils.feature_validation import *
+
+
+def contains_stop(cds, frame=0):
+    """
+    Whether or not there is a stop codon contained in the given CDS sequence in the given frame
+
+    :param cds: (iterable of characters) The coding sequence to search
+    :param frame: (int 0, 1 or 2) The initial position to start searching.
+    """
+    return any(is_stop_codon(cds[i:i + 3]) for i in range(frame, len(cds), 3))
+
+
+
+
+
+
+
 def find_starts(proto_exon, cds, left=True, right=True, central=True, happy_with_central=True):
     """Find starts in either direction.
     """
@@ -43,8 +61,7 @@ def walk_termini(cds, pos, step, esc_cod, esc_pos, win_fn, cds_slice):
     return []
 
 
-def contains_stop(sequence, frame=0):
-    return any(is_stop_codon(sequence[i:i + 3]) for i in range(frame, len(sequence), 3))
+
 
 
 def walk_splice(pos, cds, step, esc_pos, esc_cod, nframe, items, direction, cds_slice, cod_test):
