@@ -4,58 +4,6 @@ import math
 from Bio.Seq import Seq
 
 
-class GtfLine:
-
-    def __init__(self, gtf_line, updates={}):
-        if type(gtf_line) is str:
-            gtf_line = gtf_line.split("\t")
-
-        if len(gtf_line) != 9:
-            raise ValueError("GTF line length must be 9.")
-
-        self.chr = updates.get('chr', gtf_line[0])
-        self.src = updates.get('src', gtf_line[1])
-        self.feature = updates.get('feature', gtf_line[2])
-        self.start = int(updates.get('start', gtf_line[3]))
-        self.end = int(updates.get('end', gtf_line[4]))
-        self.score = updates.get('score', gtf_line[5])
-        self.strand = updates.get('strand', gtf_line[6])
-        self.frame = int(updates.get('frame', gtf_line[7]))
-        self.attribute = updates.get('attribute', gtf_line[8])
-
-
-def abs_frame(gtfline):
-    return (int(gtfline[3]) + int(gtfline[7])) % 3
-
-
-def gtf_compatible_frame(gtfline1, gtfline2):
-    return abs_frame(gtfline1) == abs_frame(gtfline2)
-
-
-def get_protoexon(gtf):
-    return [int(gtf[3]), int(gtf[4]), int(gtf[7])]
-
-
-def gtf_length(line):
-    return int(line[4]) - int(line[3]) + 1
-
-
-def gtf_lines_overlap(i, j):
-    return (int(i[3]) <= int(j[3]) and int(j[3]) <= int(i[4])) or (int(j[3]) <= int(i[3]) and int(i[3]) <= int(j[4]))
-
-
-def same_frame(i, j):
-    return (int(i[3]) + int(i[7])) % 3 == (int(j[3]) + int(j[7])) % 3
-
-
-def overlap_in_frame(i, j):
-    return gtf_lines_overlap(i, j) and same_frame(i, j)
-
-
-def gtf_line_equals(gtf1, gtf2):
-    return int(gtf1[3]) == int(gtf2[3]) and int(gtf1[4]) == int(gtf2[4]) and gtf1[0] == gtf2[0]
-
-
 def safe_gtf(gtflines):
     return sorted(de_dup([a for a in gtflines if a[2].lower() == "cds"]),
                   key=lambda x: (math.pow(-1, x[6] == "-")) * int(x[3]))
@@ -104,15 +52,22 @@ def get_non_overlapping_subsets(overlaps):
     # For a set of possibly overlapping gtflines, returns
     # all maximally non-overlapping subsets
     d_o = {}
-    for i, e in enumerate(overlaps): d_o[i] = e
+    for i, e in enumerate(overlaps):
+        d_o[i] = e
+
     G = nx.Graph()
     keys = d_o.keys()
-    for i in keys: G.add_node(i)
+
+    for i in keys:
+        G.add_node(i)
+
     for i in itertools.product(keys, keys):
         if i[0] != i[1] and gtf_lines_overlap(d_o[i[0]], d_o[i[1]]):
             G.add_edge(i[0], i[1])
+
     H = nx.complement(G)
     C = nx.find_cliques(H)
+
     return [[d_o[i] for i in k] for k in C]
 
 

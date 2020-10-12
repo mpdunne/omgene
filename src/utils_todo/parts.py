@@ -2,15 +2,16 @@ from utils.feature_validation import *
 
 
 def is_donor_part(gtfline, cds):
+
     if is_terminal_part(gtfline, cds):
         return False
-    if is_donor(cds[int(gtfline[4]): int(gtfline[4]) + 2]):
+
+    if is_donor(cds[gtfline.end: gtfline.end + 2]):
         return True
 
 
 def is_acceptor_part(gtfline, cds):
-    if is_acceptor(cds[int(gtfline[3]) - 3: int(gtfline[3]) - 1]):
-        return True
+    return is_acceptor(cds[gtfline.start - 3: gtfline.start - 1])
 
 
 def is_initial_part(gtfline, cds):
